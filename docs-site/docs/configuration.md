@@ -26,6 +26,7 @@ This document details all available configuration options for the Teams for Linu
   - [MQTT Integration](#mqtt-integration)
   - [Microsoft Graph API](#microsoft-graph-api)
   - [Quick Chat](#quick-chat)
+  - [AI Assistant](#ai-assistant)
   - [Performance & Hardware](#performance--hardware)
   - [Wayland](#wayland)
   - [Cache & Storage](#cache--storage)
@@ -452,6 +453,45 @@ All topics use retained messages by default, ensuring subscribers receive the la
 
 > [!NOTE]
 > Quick Chat requires Graph API to be enabled (`graphApi.enabled: true`) for contact search and inline messaging. The modal allows you to search for contacts, click to compose a message, and send it directly without leaving your current context. The keyboard shortcut uses Electron accelerator format. No shortcut is registered by default; you must provide one explicitly.
+
+### AI Assistant
+
+The AI assistant adds a compact toolbar next to the active Teams message composer. Users can choose a target language and translate the current draft.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `translation.enabled` | `boolean` | `false` | Enable AI assistant toolbar in Teams compose boxes |
+| `translation.provider` | `string` | `"ai"` | AI backend. Supported values: `ai`, `openai` |
+| `translation.source` | `string` | `""` | Alias of `translation.provider` |
+| `translation.targetLanguage` | `string` | `"EN"` | Default target language code shown in the toolbar dropdown |
+| `translation.apiKey` | `string` | `""` | Generic API key. When set, it overrides provider-specific `openai.apiKey` |
+| `translation.apiUrl` | `string` | `""` | Generic API URL. When set, it overrides provider-specific `openai.apiUrl` |
+| `translation.model` | `string` | `""` | Generic AI model. Used for `ai` / `openai` provider and overrides `openai.model` |
+| `translation.translationPrompt` | `string` | built-in translation prompt | Prompt used for the **Translate** action |
+| `translation.languages` | `array` | common preset list | Languages shown in the dropdown. Each entry can be a string or an object like `{ "code": "EN", "label": "English" }` |
+| `translation.timeoutMs` | `number` | `20000` | Request timeout in milliseconds |
+| `translation.openai.apiKey` | `string` | `""` | API key for an OpenAI-compatible chat completions endpoint |
+| `translation.openai.apiUrl` | `string` | `"https://api.openai.com/v1/chat/completions"` | Chat completions endpoint |
+| `translation.openai.model` | `string` | `"gpt-4.1-mini"` | Model name sent to the OpenAI-compatible endpoint |
+| `translation.openai.translationPrompt` | `string` | none | Provider-specific translation prompt fallback |
+| `translation.openai.systemPrompt` | `string` | legacy | Backward-compatible translation prompt fallback |
+
+```json title="Example Configuration - OpenAI-Compatible"
+{
+  "translation": {
+    "enabled": true,
+    "provider": "ai",
+    "targetLanguage": "FR",
+    "apiKey": "your-api-key",
+    "apiUrl": "https://api.openai.com/v1/chat/completions",
+    "model": "gpt-4.1-mini",
+    "translationPrompt": "Translate naturally and keep markdown formatting."
+  }
+}
+```
+
+> [!NOTE]
+> AI assistant requests are executed in the Electron main process. The renderer only receives non-secret translation settings, so configured API keys are not exposed through `get-config`. If both generic fields and provider-specific fields are present, the generic fields win.
 
 ### Performance & Hardware
 

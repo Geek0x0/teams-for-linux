@@ -544,6 +544,37 @@ function extractYargConfig(configObject, appVersion) {
         describe: "Quick Chat configuration for quick access to chat contacts and inline messaging via Graph API",
         type: "object",
       },
+      translation: {
+        default: {
+          enabled: false,
+          provider: "ai",
+          source: "",
+          targetLanguage: "EN",
+          apiKey: "",
+          apiUrl: "",
+          model: "",
+          translationPrompt:
+            "You are a professional translation engine. Translate the user message into the requested target language while preserving meaning, tone, formatting, markdown, placeholders, emojis, and line breaks. Return only the translated text.",
+          languages: [
+            { code: "EN", label: "English" },
+            { code: "ZH", label: "Chinese" },
+            { code: "JA", label: "Japanese" },
+            { code: "KO", label: "Korean" },
+            { code: "FR", label: "French" },
+            { code: "DE", label: "German" },
+            { code: "ES", label: "Spanish" },
+          ],
+          openai: {
+            apiKey: "",
+            apiUrl: "https://api.openai.com/v1/chat/completions",
+            model: "gpt-4.1-mini",
+            systemPrompt: "",
+          },
+        },
+        describe:
+          "AI assistant configuration for chat compose boxes (inline translation). Supports AI/OpenAI-compatible APIs. Generic apiKey/apiUrl/model fields are also supported.",
+        type: "object",
+      },
       graphApi: {
         default: {
           enabled: false,

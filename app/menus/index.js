@@ -15,6 +15,7 @@ const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
 const JoinMeetingDialog = require("../joinMeetingDialog");
+const TranslationSettingsDialog = require("../translationSettingsDialog");
 const autoUpdaterModule = require("../autoUpdater");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
@@ -33,6 +34,7 @@ class Menus {
       this.window,
       this.configGroup.startupConfig.meetupJoinRegEx
     );
+    this.translationSettingsDialog = new TranslationSettingsDialog(this.window);
     this.initialize();
   }
 
@@ -135,7 +137,7 @@ class Menus {
   initialize() {
     const menu = appMenu(this);
 
-    if (this.configGroup.startupConfig.menubar == "hidden") {
+    if (this.configGroup.startupConfig.menubar === "hidden") {
       this.window.removeMenu();
     } else {
       this.window.setMenu(Menu.buildFromTemplate([menu]));
@@ -202,6 +204,10 @@ class Menus {
         type: "warning",
       });
     }
+  }
+
+  showTranslationSettings() {
+    this.translationSettingsDialog.show();
   }
 
   updateMenu() {
@@ -589,7 +595,7 @@ function chooseLanguage(item, menus) {
 }
 
 function removeFromList(list, item) {
-  const itemIndex = list.findIndex((l) => l == item);
+  const itemIndex = list.findIndex((l) => l === item);
   if (itemIndex >= 0) {
     list.splice(itemIndex, 1);
   }
@@ -598,7 +604,7 @@ function removeFromList(list, item) {
 }
 
 function addToList(list, item) {
-  const itemIndex = list.findIndex((l) => l == item);
+  const itemIndex = list.findIndex((l) => l === item);
   if (itemIndex < 0) {
     list.push(item);
   }

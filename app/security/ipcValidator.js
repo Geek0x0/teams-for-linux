@@ -82,6 +82,10 @@ const allowedChannels = new Set([
   'graph-api-get-mail-messages',
   'graph-api-search-people',
   'graph-api-send-chat-message',
+  'translate-text',
+  'inline-translate-debug',
+  'translation-settings:get',
+  'translation-settings:update',
 
   // Join meeting dialog
   'join-meeting-submit',

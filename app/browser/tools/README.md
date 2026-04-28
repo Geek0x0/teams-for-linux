@@ -107,6 +107,12 @@ Manages zoom level controls and persistence across sessions.
 #### [navigationButtons.js](navigationButtons.js)
 Adds back and forward navigation buttons to the Teams interface, similar to the Microsoft official Teams app. Injects styled buttons next to the search region and handles navigation state updates.
 
+#### [inlineTranslate.js](inlineTranslate.js)
+Adds a compact AI assistant toolbar next to the active chat compose box. Users can choose a target language and translate the current draft using an AI/OpenAI-compatible API through the main process.
+
+**Configuration**: `translation.enabled: true`
+**Use Case**: Translate drafts before sending in Teams chat
+
 ### System Integration
 
 #### [emulatePlatform.js](emulatePlatform.js)
