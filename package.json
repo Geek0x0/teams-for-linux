@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.8.1",
+  "version": "2.9.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -52,7 +52,7 @@
     "release": "electron-builder"
   },
   "dependencies": {
-    "@homebridge/dbus-native": "0.7.4",
+    "@homebridge/dbus-native": "0.7.5",
     "electron-log": "^5.4.3",
     "electron-store": "11.0.2",
     "electron-updater": "^6.8.3",
@@ -63,11 +63,11 @@
   "devDependencies": {
     "@electron/fuses": "^2.1.1",
     "@eslint/js": "^10.0.1",
-    "electron": "41.3.0",
+    "electron": "41.5.0",
     "@playwright/test": "1.59.1",
     "electron-builder": "^26.8.1",
-    "eslint": "^10.2.1",
-    "globals": "^17.5.0",
+    "eslint": "^10.3.0",
+    "globals": "^17.6.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
   },
@@ -98,7 +98,7 @@
       "synopsis": "Teams for Linux",
       "description": "Unofficial Microsoft Teams client for Linux using Electron. It uses the Web App and wraps it as a standalone application using Electron.",
       "executableArgs": [
-        "--ozone-platform=x11"
+        "--ozone-platform=auto"
       ],
       "desktop": {
         "entry": {
@@ -142,7 +142,7 @@
       "grade": "stable",
       "base": "core22",
       "executableArgs": [
-        "--ozone-platform=x11"
+        "--ozone-platform=auto"
       ],
       "plugs": [
         "default",

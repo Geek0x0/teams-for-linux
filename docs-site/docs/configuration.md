@@ -308,6 +308,12 @@ Media settings are organized under the `media` configuration object with subgrou
 |--------|------|---------|-------------|
 | `media.microphone.disableAutogain` | `boolean` | `false` | Disable microphone auto gain control - prevents Teams from automatically adjusting microphone volume levels. Useful for professional audio setups or when manual gain control is preferred |
 | `media.microphone.speakingIndicator` | `boolean` | `false` | Enable visual overlay showing microphone state during calls (speaking/silent/muted). When enabled, also provides WebRTC-based call state detection. Note: when `mqtt.enabled` is true, the WebRTC call detection activates automatically even without this option, ensuring reliable `in-call` topic publishing |
+| `media.microphone.overrideConstraints.enabled` | `boolean` | `false` | Enable overriding the microphone audio constraints Teams requests via `getUserMedia`. Lets users disable WebRTC APM processing (echo cancellation, noise suppression, auto gain control) or pin `channelCount` / `sampleRate` at the Chromium/WebRTC layer — the Linux equivalent of "High fidelity music mode" (Windows-only in the official Teams client). Only the keys you set are overridden; omitted keys are left untouched. |
+| `media.microphone.overrideConstraints.echoCancellation` | `boolean` | - | When set, overrides `getUserMedia`'s `echoCancellation` constraint. Omit to leave it untouched. |
+| `media.microphone.overrideConstraints.noiseSuppression` | `boolean` | - | When set, overrides `getUserMedia`'s `noiseSuppression` constraint. Omit to leave it untouched. |
+| `media.microphone.overrideConstraints.autoGainControl` | `boolean` | - | When set, overrides `getUserMedia`'s `autoGainControl` constraint. (Same surface as `disableAutogain`; this key takes precedence when both are set.) Omit to leave it untouched. |
+| `media.microphone.overrideConstraints.channelCount` | `number` | - | When set, pins the microphone channel count (typically `1` or `2`). Omit to leave it untouched. Browsers may silently downgrade if the device does not support the requested count. |
+| `media.microphone.overrideConstraints.sampleRate` | `number` | - | When set, pins the microphone sample rate in Hz (e.g., `48000`). Omit to leave it untouched. Browsers may silently downgrade if the device does not support the requested rate. |
 | `media.camera.resolution.enabled` | `boolean` | `false` | Enable camera resolution control |
 | `media.camera.resolution.mode` | `string` | `"remove"` | Resolution mode: `"remove"` removes Teams' constraints allowing native camera resolution, `"override"` sets specific width/height |
 | `media.camera.resolution.width` | `number` | - | Target width when mode is `"override"` |
@@ -720,7 +726,7 @@ The configuration file can include Electron CLI flags that will be added when th
 > For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string.
 
 > [!WARNING]
-> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). To override the default X11 mode, pass `--ozone-platform=wayland` or `--ozone-platform=auto` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
+> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). The default is `--ozone-platform=auto`, which lets Chromium pick the backend based on the session. To force a specific backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
 
 #### Custom Feature Flags (enable-features / disable-features)
 
