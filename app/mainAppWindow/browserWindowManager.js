@@ -84,8 +84,10 @@ class BrowserWindowManager {
       x: windowState.x,
       y: windowState.y,
 
-      width: windowState.width,
-      height: windowState.height,
+      width: windowState.width || 800,
+      height: windowState.height || 600,
+      minWidth: 800,
+      minHeight: 600,
       backgroundColor: nativeTheme.shouldUseDarkColors ? "#302a75" : "#fff",
 
       show: false,

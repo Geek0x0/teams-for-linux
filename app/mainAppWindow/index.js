@@ -649,13 +649,19 @@ function onDidFrameFinishLoad(
 }
 
 function restoreWindow() {
-  // If minimized, restore.
   if (window.isMinimized()) {
     window.restore();
-  }
-
-  // If closed to tray, show.
-  else if (!window.isVisible()) {
+  } else if (!window.isVisible()) {
+    // Some Linux WMs report altered bounds for hidden windows, causing the
+    // window to restore at a very small size.  Enforce a minimum size before
+    // calling show() so the user always gets a usable window.
+    const bounds = window.getBounds();
+    if (bounds.width < 400 || bounds.height < 300) {
+      window.setSize(
+        Math.max(bounds.width, 800),
+        Math.max(bounds.height, 600)
+      );
+    }
     window.show();
   }
 
