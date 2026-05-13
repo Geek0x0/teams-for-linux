@@ -716,7 +716,8 @@ async function handleAppReady() {
         profileViewManager = new ProfileViewManager(
           mainWindow,
           profilesManager,
-          config
+          config,
+          mainAppWindow.bindDisplayMediaHandler
         );
         profileViewManager.initialize();
         await profileViewManager.bootstrapProfileZeroIfNeeded();
