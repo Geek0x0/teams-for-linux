@@ -18,6 +18,7 @@ const JoinMeetingDialog = require("../joinMeetingDialog");
 const AddProfileDialog = require("../profileDialogs/addProfile");
 const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const TranslationSettingsDialog = require("../translationSettingsDialog");
+const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const autoUpdaterModule = require("../autoUpdater");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
@@ -51,7 +52,6 @@ class Menus {
     this.manageProfileDialog = multiAccountReady
       ? new ManageProfileDialog(this.window, this.profilesManager)
       : null;
-    this.translationSettingsDialog = new TranslationSettingsDialog(this.window);
     this.initialize();
   }
 
