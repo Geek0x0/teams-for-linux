@@ -17,9 +17,8 @@ const GpuInfoWindow = require("../gpuInfoWindow");
 const JoinMeetingDialog = require("../joinMeetingDialog");
 const AddProfileDialog = require("../profileDialogs/addProfile");
 const ManageProfileDialog = require("../profileDialogs/manageProfile");
-const TranslationSettingsDialog = require("../translationSettingsDialog");
-const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const autoUpdaterModule = require("../autoUpdater");
+const TranslationSettingsDialog = require("../translationSettingsDialog");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
