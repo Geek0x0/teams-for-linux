@@ -7,6 +7,8 @@ const {
   webFrameMain,
   nativeImage,
   desktopCapturer,
+  ipcMain,
+  MessageChannelMain,
 } = require("electron");
 const { StreamSelector } = require("../screenSharing");
 const login = require("../login");
@@ -124,11 +126,8 @@ function createScreenSharePreviewWindow() {
   const startTime = Date.now();
 
   // Get configuration - use the module-level config variable
-  // Support both new (screenSharing.thumbnail) and legacy (screenSharingThumbnail) config paths
   let thumbnailConfig =
-    config?.screenSharing?.thumbnail ??
-    config?.screenSharingThumbnail ??
-    DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
+    config?.screenSharing?.thumbnail ?? DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG;
 
   const previewWindow = screenSharingService.getPreviewWindow();
   const activeSource = screenSharingService.getSelectedSource();
@@ -387,9 +386,8 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   screenSharingService = sharingService;
   profilesManagerRef = profilesManager;
 
-  // Support both new (auth.intune.*) and deprecated (ssoInTune*) config options
-  const intuneEnabled = config.auth?.intune?.enabled || config.ssoInTuneEnabled;
-  const intuneUser = config.auth?.intune?.user ?? config.ssoInTuneAuthUser ?? "";
+  const intuneEnabled = config.auth?.intune?.enabled;
+  const intuneUser = config.auth?.intune?.user ?? "";
   if (intuneEnabled) {
     intune = require("../intune");
     await intune.initSso(intuneUser);
@@ -400,23 +398,20 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
     if (isMac) {
       console.info("Setting Dock icon for macOS");
-      let dockIconPath;
-      
-      // Use custom icon if specified, otherwise use default 256x256 icon for dock
-      if (config.appIcon && config.appIcon.trim() !== "") {
-        dockIconPath = config.appIcon;
-      } else {
-        dockIconPath = path.join(config.appPath, "assets/icons/icon-96x96.png");
-      }
-      
+
+      // macOS requires >=128x128 for the dock; use the 256x256 asset by default.
+      const DEFAULT_MACOS_DOCK_ICON = "assets/icons/icon-256x256.png";
+      const dockIconPath = config.appIcon && config.appIcon.trim() !== ""
+        ? config.appIcon
+        : path.join(config.appPath, DEFAULT_MACOS_DOCK_ICON);
+
       const icon = nativeImage.createFromPath(dockIconPath);
       const iconSize = icon.getSize();
-      
+
       if (iconSize.width < 128) {
         console.warn(
           `Unable to set dock icon for macOS, icon size is less than 128x128, current size ${iconSize.width}x${iconSize.height}. Using resized icon.`
         );
-        // Resize the icon to meet macOS dock requirements
         const resizedIcon = icon.resize({ width: 128, height: 128 });
         app.dock.setIcon(resizedIcon);
       } else {
@@ -443,6 +438,44 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   }
 
   bindDisplayMediaHandler(window.webContents.session);
+
+  // #2534: when the renderer signals that screen sharing has started, make
+  // sure the preview window is open and connect the two renderers with a
+  // direct MessagePort. The Teams-side script pumps VideoFrames from the
+  // active screen-share track through it; the preview window reconstructs the
+  // stream on the other end via MediaStreamTrackGenerator. This avoids a
+  // second getUserMedia/portal call (which on Wayland needs a PipeWire token
+  // we cannot reuse) and means one capture feeds both Teams and the preview.
+  // The 'screen-sharing-started' / 'screen-sharing-stopped' channels are a
+  // broadcast: ScreenSharingService updates internal state, MQTTMediaStatusService
+  // publishes to the broker, and this listener wires the MessagePort. Adding
+  // another ipcMain.on here is the established pattern, not a duplication.
+  ipcMain.on("screen-sharing-started", () => {
+    if (!window || window.isDestroyed()) return;
+    createScreenSharePreviewWindow();
+    const previewWindow = screenSharingService.getPreviewWindow();
+    if (!previewWindow || previewWindow.isDestroyed()) {
+      console.debug("[SCREEN_SHARE_DIAG] No preview window after creation (thumbnail disabled or already destroyed) - skipping port wiring");
+      return;
+    }
+    const postPorts = () => {
+      try {
+        const { port1, port2 } = new MessageChannelMain();
+        window.webContents.postMessage("screen-share-port", null, [port1]);
+        previewWindow.webContents.postMessage("screen-share-port", null, [port2]);
+        console.debug("[SCREEN_SHARE_DIAG] Posted MessagePort to Teams renderer and preview window");
+      } catch (error) {
+        console.error("[SCREEN_SHARE_DIAG] Failed to post MessagePort", {
+          error: error.message,
+        });
+      }
+    };
+    if (previewWindow.webContents.isLoading()) {
+      previewWindow.webContents.once("did-finish-load", postPorts);
+    } else {
+      postPorts();
+    }
+  });
 
   // Initialize connection manager
   connectionManager = new ConnectionManager();

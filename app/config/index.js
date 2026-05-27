@@ -111,16 +111,6 @@ function extractYargConfig(configObject, appVersion) {
           "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel).",
         type: "object",
       },
-      screenSharingThumbnail: {
-        default: {
-          enabled: true,
-          alwaysOnTop: true,
-        },
-        deprecated: "Use screenSharing.thumbnail instead. This option will be removed in a future version.",
-        describe:
-          "[DEPRECATED] Use screenSharing.thumbnail instead. Controls the thumbnail preview window during active screen sharing.",
-        type: "object",
-      },
       appIcon: {
         default: "",
         describe: "Teams app icon to show in the tray",
@@ -206,6 +196,26 @@ function extractYargConfig(configObject, appVersion) {
         describe: "custom CSS styles file location",
         type: "string",
       },
+      customStickers: {
+        default: {
+          enabled: false,
+          folder: "",
+          formats: ["png", "jpg", "jpeg", "gif", "webp"],
+          urlImport: {
+            enabled: true,
+            allowedContentTypes: [
+              "image/png",
+              "image/jpeg",
+              "image/gif",
+              "image/webp",
+            ],
+            maxBytes: 5242880,
+          },
+        },
+        describe:
+          "Custom stickers feature. enabled: master flag (off by default). folder: absolute path to the sticker folder; empty string uses <userData>/stickers/ (auto-created). formats: file extensions to scan (lowercase, no leading dot). The scanner reads the configured folder plus one level of subdirectories so packs imported under <folder>/<pack>/ are visible. urlImport: HTTPS URL import (drop or paste a URL onto the sticker panel); allowedContentTypes restricts what the wrapper will save; maxBytes caps individual file size.",
+        type: "object",
+      },
       disableTimestampOnCopy: {
         default: false,
         describe:
@@ -260,12 +270,6 @@ function extractYargConfig(configObject, appVersion) {
         default: "",
         describe: "Default application to be used to open the HTTP URLs",
         type: "string",
-      },
-      disableAutogain: {
-        default: false,
-        describe: "DEPRECATED: Use media.microphone.disableAutogain instead",
-        type: "boolean",
-        deprecated: "Use media.microphone.disableAutogain instead",
       },
       disableGpu: {
         default: false,
@@ -348,8 +352,9 @@ function extractYargConfig(configObject, appVersion) {
         type: "boolean",
       },
       followSystemTheme: {
-        default: false,
-        describe: "Follow system theme",
+        default: true,
+        describe:
+          "Follow the operating-system dark/light theme preference. Default is true; set false to keep Teams's own theme regardless of OS changes.",
         type: "boolean",
       },
       frame: {
@@ -452,14 +457,6 @@ function extractYargConfig(configObject, appVersion) {
     	  "to re-enable QUIC if a future Chromium release fixes the underlying transport bug.",
 	type: "object",
       },
-      screenLockInhibitionMethod: {
-        default: "Electron",
-        deprecated: "Use screenSharing.lockInhibitionMethod instead. This option will be removed in a future version.",
-        describe:
-          "[DEPRECATED] Use screenSharing.lockInhibitionMethod instead. Screen lock inhibition method (Electron/WakeLockSentinel).",
-        type: "string",
-        choices: ["Electron", "WakeLockSentinel"],
-      },
       spellCheckerLanguages: {
         default: [],
         describe:
@@ -475,18 +472,6 @@ function extractYargConfig(configObject, appVersion) {
         default: "",
         describe: "Command to execute to retrieve password for SSO basic auth.",
         type: "string",
-      },
-      ssoInTuneEnabled: {
-        default: false,
-        describe: "Enable Single-Sign-On using Microsoft InTune.",
-        type: "boolean",
-        deprecated: "Use auth.intune.enabled instead",
-      },
-      ssoInTuneAuthUser: {
-        default: "",
-        describe: "User (e-mail) to use for InTune SSO.",
-        type: "string",
-        deprecated: "Use auth.intune.user instead",
       },
       trayIconEnabled: {
         default: true,
@@ -521,12 +506,6 @@ function extractYargConfig(configObject, appVersion) {
         default: false,
         describe: "Enable debug at start",
         type: "boolean",
-      },
-      videoMenu: {
-        default: false,
-        describe: "DEPRECATED: Use media.video.menuEnabled instead",
-        type: "boolean",
-        deprecated: "Use media.video.menuEnabled instead",
       },
       media: {
         default: {

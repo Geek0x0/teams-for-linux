@@ -97,7 +97,7 @@ Place your `config.json` file in the appropriate location based on your installa
 |--------|------|---------|-------------|
 | `customCSSName` | `string` | `""` | Custom CSS name. Options: "compactDark", "compactLight", "tweaks", "condensedDark", "condensedLight" |
 | `customCSSLocation` | `string` | `""` | Custom CSS styles file location |
-| `followSystemTheme` | `boolean` | `false` | Follow system theme |
+| `followSystemTheme` | `boolean` | `true` | Follow the operating-system dark/light theme preference. Set `false` to keep Teams's own theme regardless of OS changes. |
 
 ### Tray Icon
 
@@ -220,7 +220,7 @@ InTune SSO uses a nested `auth.intune` configuration:
 | `auth.intune.enabled` | `boolean` | `false` | Enable Single-Sign-On using Microsoft InTune |
 | `auth.intune.user` | `string` | `""` | User (e-mail) to use for InTune SSO |
 
-**Legacy Options (Deprecated):**
+**Removed Options (migrate before upgrading):**
 
 | Old Option | New Option | Notes |
 |------------|------------|-------|
@@ -250,6 +250,7 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `auth.webauthn.enabled` | `boolean` | `false` | Enable FIDO2 hardware security key support for WebAuthn authentication on Linux |
+| `auth.webauthn.debug` | `boolean` | `false` | Enable verbose WebAuthn diagnostic logging (useful for beta testers troubleshooting key registration) |
 
 #### Certificates
 
@@ -276,7 +277,7 @@ Opt-in configuration for the single-window multi-tenant account switcher:
 |--------|------|---------|-------------|
 | `multiAccount.enabled` | `boolean` | `false` | Opt-in flag for the multi-account profile switcher. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design. |
 
-**Mutual exclusion with Intune SSO:** If `multiAccount.enabled` is `true` at startup and Intune SSO is enabled via either `auth.intune.enabled` or the legacy `ssoInTuneEnabled` flag, the app logs a warning, appends it to `config.warnings`, and disables multi-account for the session. The Linux D-Bus Microsoft Identity Broker has undocumented behavior around concurrent enrollments for different UPNs on one machine, so Phase 1 treats Intune as single-profile-only. Users who need both can track follow-up discussion on the ADR.
+**Mutual exclusion with Intune SSO:** If `multiAccount.enabled` is `true` at startup and `auth.intune.enabled` is also `true`, the app logs a warning, appends it to `config.warnings`, and disables multi-account for the session. The Linux D-Bus Microsoft Identity Broker has undocumented behavior around concurrent enrollments for different UPNs on one machine, so Phase 1 treats Intune as single-profile-only. Users who need both can track follow-up discussion on the ADR.
 
 ### Network & Proxy
 
@@ -325,7 +326,7 @@ Screen sharing settings are organized under the `screenSharing` configuration ob
 | `screenSharing.thumbnail.alwaysOnTop` | `boolean` | `true` | Keep thumbnail window always on top |
 | `screenSharing.lockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
 
-**Legacy Options (Deprecated):**
+**Removed Options (migrate before upgrading):**
 
 | Old Option | New Option | Notes |
 |------------|------------|-------|
@@ -367,7 +368,7 @@ Media settings are organized under the `media` configuration object with subgrou
 }
 ```
 
-**Legacy Options (Deprecated):**
+**Removed Options (migrate before upgrading):**
 
 | Old Option | New Option | Notes |
 |------------|------------|-------|
@@ -385,6 +386,19 @@ Media settings are organized under the `media` configuration object with subgrou
 | `isCustomBackgroundEnabled` | `boolean` | `false` | Enable custom background feature |
 | `customBGServiceBaseUrl` | `string` | `"http://localhost"` | Base URL of the server which provides custom background images |
 | `customBGServiceConfigFetchInterval` | `number` | `0` | Poll interval in seconds to download background service config |
+
+### Custom Stickers
+
+A floating sticker panel that lists image files from a local folder and pastes the selected one into the focused chat compose box. Off by default. See [`app/customStickers/README.md`](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customStickers/README.md) for details.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `customStickers.enabled` | `boolean` | `false` | Master flag for the custom stickers feature |
+| `customStickers.folder` | `string` | `""` | Absolute path to the sticker folder. Empty string uses `<userData>/stickers/`, which is created on first run if missing |
+| `customStickers.formats` | `array` | `["png", "jpg", "jpeg", "gif", "webp"]` | File extensions the scanner accepts (lowercase, no leading dot). The scanner reads the configured folder plus one level of subdirectories, so stickers organised under `<folder>/<group>/` are visible. |
+| `customStickers.urlImport.enabled` | `boolean` | `true` | Allow importing stickers from HTTPS URLs via the panel header input or by dropping a URL on the panel |
+| `customStickers.urlImport.allowedContentTypes` | `array` | `["image/png", "image/jpeg", "image/gif", "image/webp"]` | Response content-types the wrapper will accept and save when importing from a URL |
+| `customStickers.urlImport.maxBytes` | `number` | `5242880` | Per-file size cap (in bytes) for URL imports. Responses larger than this are rejected |
 
 ### URL & Protocol Handling
 
@@ -415,6 +429,9 @@ Media settings are organized under the `media` configuration object with subgrou
 | `mqtt.statusTopic` | `string` | `"status"` | Topic name for status messages (outbound, combined with topicPrefix) |
 | `mqtt.commandTopic` | `string` | `""` | Topic name for receiving commands (inbound). Leave empty to disable (status-only mode). Set to `"command"` to enable bidirectional mode. |
 | `mqtt.statusCheckInterval` | `number` | `10000` | Polling interval in milliseconds for status detection fallback |
+| `mqtt.homeAssistant.enabled` | `boolean` | `false` | Enable Home Assistant MQTT auto-discovery (publishes discovery configs so HA creates entities automatically) |
+| `mqtt.homeAssistant.discoveryPrefix` | `string` | `"homeassistant"` | MQTT discovery topic prefix used by Home Assistant |
+| `mqtt.homeAssistant.deviceName` | `string` | `"Teams for Linux"` | Device name shown in Home Assistant |
 
 **Example MQTT Configuration:**
 ```json
@@ -425,10 +442,15 @@ Media settings are organized under the `media` configuration object with subgrou
     "username": "teams-user",
     "password": "secret",
     "clientId": "teams-for-linux",
-    "topicPrefix": "home/office",
-    "statusTopic": "teams/status",
-    "commandTopic": "teams/command",
-    "statusCheckInterval": 10000
+    "topicPrefix": "teams",
+    "statusTopic": "status",
+    "commandTopic": "command",
+    "statusCheckInterval": 10000,
+    "homeAssistant": {
+      "enabled": true,
+      "discoveryPrefix": "homeassistant",
+      "deviceName": "Teams for Linux"
+    }
   }
 }
 ```
@@ -440,10 +462,11 @@ When MQTT is enabled, the following topics are automatically published:
 | Topic | Payload | Description |
 |-------|---------|-------------|
 | `\{topicPrefix\}/connected` | `"true"` or `"false"` | App connection state (uses MQTT Last Will) |
-| `\{topicPrefix\}/status` | JSON object | User presence status (Available, Busy, DND, Away, BRB) |
+| `\{topicPrefix\}/\{statusTopic\}` | JSON object | User presence status (Available, Busy, DND, Away, BRB) |
 | `\{topicPrefix\}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected). Uses WebRTC fallback for reliable detection even from popup windows. |
-| `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (Phase 2) |
-| `\{topicPrefix\}/microphone` | `"true"` or `"false"` | Microphone on/off state (Phase 2) |
+| `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (monitors video sender track via WebRTC, filters out screen-sharing tracks) |
+| `\{topicPrefix\}/microphone` | `"speaking"` \| `"silent"` \| `"muted"` \| `"off"` | Microphone state derived from the WebRTC speaking-indicator. `speaking` = audio is being transmitted, `silent` = mic open but quiet, `muted` = Teams has zeroed the audio signal, `off` = not in a call. Activates when `mqtt.enabled` is true (no separate toggle required). |
+| `\{topicPrefix\}/incoming-call` | `"true"` or `"false"` | Incoming call ringing state. Fires before user accepts. Parity with `incomingCallCommand`. Covers 1:1 ring-type calls. |
 | `\{topicPrefix\}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
 
 All topics use retained messages by default, ensuring subscribers receive the last known state immediately upon connecting.
