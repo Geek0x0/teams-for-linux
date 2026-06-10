@@ -1,7 +1,7 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 71,
+  "optionCount": 72,
   "options": [
     {
       "name": "appActiveCheckInterval",
@@ -347,6 +347,12 @@
       "description": "Start the application minimized"
     },
     {
+      "name": "minimizeOnClose",
+      "type": "boolean",
+      "default": false,
+      "description": "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)"
+    },
+    {
       "name": "notificationMethod",
       "type": "string",
       "default": "web",
@@ -518,9 +524,12 @@
         "webauthn": {
           "enabled": false,
           "debug": false
+        },
+        "reauthRecovery": {
+          "enabled": false
         }
       },
-      "description": "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only."
+      "description": "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.reauthRecovery.enabled opts into in-app recovery from stale sessions and is off by default. When on, it intercepts the Microsoft login popup opened by the stale 'sign in again' banner and recovers in-app (clearing stale auth state and reloading) instead of opening the popup externally. Uncaught Teams worker 'UPR' errors are used only to recognise a genuinely broken session for this interception — they are noisy and fire on healthy sessions, so they never trigger an automatic reload on their own; the reliable MSAL InteractionRequired signal is what drives automatic recovery, regardless of this flag. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted. During an active call, recovery is never run silently (it would end the call): the user is asked whether to sign in now, after the call, or not at all."
     },
     {
       "name": "multiAccount",

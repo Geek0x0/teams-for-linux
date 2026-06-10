@@ -3,7 +3,7 @@
 This document details all available configuration options for the Teams for Linux application. These options can be set via command-line arguments or in a `config.json` file located in the application's configuration directory.
 
 :::note
-For a complete, always-up-to-date list of every option generated directly from the code, see the [Configuration Options Reference](configuration-generated.md). This guide adds examples, file locations, and platform notes on top of that reference.
+For a complete, always-up-to-date list of every option generated directly from the code, see the [Configuration Options Reference](configuration-generated.md), or use the interactive [Configuration Explorer](configuration-explorer.mdx) to search the options and build a `config.json`. This guide adds examples, file locations, and platform notes on top of those.
 :::
 
 {/* toc */}
@@ -91,6 +91,7 @@ Place your `config.json` file in the appropriate location based on your installa
 | `frame` | `boolean` | `true` | Specify false to create a Frameless Window |
 | `menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
 | `minimized` | `boolean` | `false` | Start the application minimized |
+| `minimizeOnClose` | `boolean` | `false` | Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when `closeAppOnCross` is true) |
 | `closeAppOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |
 | `alwaysOnTop` | `boolean` | `true` | Keep the pop-out window always on top of other windows |
 | `class` | `string` | `null` | Custom value for the WM_CLASS property |
@@ -265,7 +266,7 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 
 ### Multi-Account Profile Switcher (Experimental)
 
-> **Status:** Phase 1 MVP scaffolding. The flag is wired through config, but the switcher UI, profile CRUD, and session isolation plumbing land in follow-up PRs tracked in [ADR-020](development/adr/020-multi-account-profile-switcher). Enabling the flag today has no user-visible effect beyond the Intune mutex check described below.
+> **Status:** Phase 1 partially shipped. With the flag enabled you get a **Profiles** menu (Add / Switch / Manage / Remove profiles), first-run migration of your existing session into a default "My account" profile, and per-profile session isolation — each profile runs against its own `persist:teams-profile-{uuid}` partition so cookies, tokens, and storage never cross tenants. Still in progress: the top-right dropdown switcher overlay and `Ctrl+Shift+1…5` shortcuts for pinned profiles. See [ADR-020](development/adr/020-multi-account-profile-switcher) for the full design and remaining phases.
 
 Opt-in configuration for the single-window multi-tenant account switcher:
 

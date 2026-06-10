@@ -332,6 +332,12 @@ module.exports = {
         describe: "Start the application minimized",
         type: "boolean",
       },
+      minimizeOnClose: {
+        default: false,
+        describe:
+          "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)",
+        type: "boolean",
+      },
       notificationMethod: {
         default: "web",
         describe:
@@ -521,8 +527,11 @@ module.exports = {
             enabled: false,
             debug: false,
           },
+          reauthRecovery: {
+            enabled: false,
+          },
         },
-        describe: "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only.",
+        describe: "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.reauthRecovery.enabled opts into in-app recovery from stale sessions and is off by default. When on, it intercepts the Microsoft login popup opened by the stale 'sign in again' banner and recovers in-app (clearing stale auth state and reloading) instead of opening the popup externally. Uncaught Teams worker 'UPR' errors are used only to recognise a genuinely broken session for this interception — they are noisy and fire on healthy sessions, so they never trigger an automatic reload on their own; the reliable MSAL InteractionRequired signal is what drives automatic recovery, regardless of this flag. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted. During an active call, recovery is never run silently (it would end the call): the user is asked whether to sign in now, after the call, or not at all.",
         type: "object",
       },
       multiAccount: {
