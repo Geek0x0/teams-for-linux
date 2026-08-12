@@ -50,6 +50,13 @@ class ApplicationTray {
       if (this.window.isMinimized()) {
         this.window.restore();
       } else if (!this.window.isVisible()) {
+        const bounds = this.window.getBounds();
+        if (bounds.width < 400 || bounds.height < 300) {
+          this.window.setSize(
+            Math.max(bounds.width, 800),
+            Math.max(bounds.height, 600)
+          );
+        }
         this.window.show();
       }
       this.window.focus();
