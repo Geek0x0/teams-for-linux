@@ -104,6 +104,13 @@ function getSettingsMenu(Menus) {
     label: "Settings",
     submenu: [
       {
+        label: "AI Assistant...",
+        click: () => Menus.showTranslationSettings(),
+      },
+      {
+        type: "separator",
+      },
+      {
         label: "Save",
         click: () => Menus.saveSettings(),
       },

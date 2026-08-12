@@ -24,6 +24,12 @@ const NotificationService = require("./notifications/service");
 const CustomNotificationManager = require("./notificationSystem");
 const DownloadManager = require("./downloadManager");
 const QuickChatManager = require("./quickChat");
+const TranslationService = require("./translation");
+const {
+  getTranslationDialogSettings,
+  sanitizeTranslationDialogSettings,
+  applyTranslationDialogSettings,
+} = require("./translation/settings");
 const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const ProfilesManager = require("./profilesManager");
@@ -88,6 +94,7 @@ const appConfig = new AppConfiguration(
 );
 
 const config = appConfig.startupConfig;
+loadTranslationSettingsFromStore();
 config.appPath = path.join(__dirname, app.isPackaged ? "../../" : "");
 
 CommandLineManager.addSwitchesAfterConfigLoad(config);
@@ -112,6 +119,7 @@ let mqttMediaStatusService = null;
 let haDiscovery = null;
 let graphApiClient = null;
 let quickChatManager = null;
+let translationService = null;
 
 const { createPlayer } = require("./audio/player");
 const player = createPlayer();
@@ -151,6 +159,7 @@ let profileViewManager = null;
 const idleMonitor = new IdleMonitor(config, getUserStatus);
 
 const customNotificationManager = new CustomNotificationManager(config, mainAppWindow);
+translationService = new TranslationService(config);
 
 // Issue #2512: Electron silently saves downloads to ~/Downloads with no UI
 // feedback unless `session.on('will-download', …)` is wired up. The manager
@@ -249,7 +258,45 @@ if (gotTheLock) {
   ipcMain.on("config-file-changed", restartApp);
   // Get current application configuration
   ipcMain.handle("get-config", async () => {
-    return config;
+    return getRendererConfig(config);
+  });
+
+  ipcMain.handle("translate-text", async (_event, request) => {
+    return translationService.translate(request);
+  });
+
+  ipcMain.handle("translation-settings:get", async () => {
+    return getTranslationDialogSettings(config.translation);
+  });
+
+  ipcMain.handle("translation-settings:update", async (_event, settings) => {
+    try {
+      const sanitizedSettings = sanitizeTranslationDialogSettings(
+        settings,
+        getTranslationDialogSettings(config.translation)
+      );
+      config.translation = applyTranslationDialogSettings(
+        config.translation,
+        sanitizedSettings
+      );
+      appConfig.settingsStore.set("translation", sanitizedSettings);
+      sendRendererConfigUpdate({
+        translation: getRendererConfig(config).translation,
+      });
+      return {
+        success: true,
+        settings: getTranslationDialogSettings(config.translation),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || error.toString(),
+      };
+    }
+  });
+
+  ipcMain.on("inline-translate-debug", (_event, payload) => {
+    console.info("[INLINE_TRANSLATE]", payload);
   });
 
   notificationService.initialize();
@@ -379,6 +426,48 @@ function restartApp() {
   console.info("Restarting app...");
   app.relaunch();
   app.exit();
+}
+
+function getRendererConfig(sourceConfig) {
+  const rendererConfig = JSON.parse(JSON.stringify(sourceConfig));
+
+  // Keep translation provider secrets in the main process.
+  if (rendererConfig.translation) {
+    rendererConfig.translation.apiKey = "";
+  }
+
+  if (rendererConfig.translation?.openai) {
+    rendererConfig.translation.openai.apiKey = "";
+  }
+
+  // Legacy compatibility: keep any old deepl object, but never expose its apiKey.
+  if (rendererConfig.translation?.deepl) {
+    rendererConfig.translation.deepl.apiKey = "";
+  }
+
+  return rendererConfig;
+}
+
+function loadTranslationSettingsFromStore() {
+  const storedTranslationSettings = appConfig.settingsStore.get("translation");
+
+  if (
+    storedTranslationSettings &&
+    typeof storedTranslationSettings === "object" &&
+    !Array.isArray(storedTranslationSettings)
+  ) {
+    config.translation = applyTranslationDialogSettings(
+      config.translation,
+      storedTranslationSettings
+    );
+  }
+}
+
+function sendRendererConfigUpdate(configChanges) {
+  const mainWindow = mainAppWindow.getWindow();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("config-changed", configChanges);
+  }
 }
 
 const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;

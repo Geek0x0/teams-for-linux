@@ -118,6 +118,17 @@ globalThis.electronAPI = {
   },
 
   getConfig: () => ipcRenderer.invoke("get-config"),
+  translateText: (request) => {
+    if (!request || typeof request !== "object") {
+      return Promise.reject(new Error("Invalid translation request"));
+    }
+
+    if (typeof request.text !== "string" || request.text.length > 20000) {
+      return Promise.reject(new Error("Invalid translation text"));
+    }
+
+    return ipcRenderer.invoke("translate-text", request);
+  },
 
   showNotification: (options) => {
     if (!options || typeof options !== 'object') {
@@ -416,6 +427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.debug("Preload: DOMContentLoaded, initializing browser modules...");
   try {
     const config = await ipcRenderer.invoke("get-config");
+    const loadedModules = new Map();
     console.debug("Preload: Got config:", {
       trayIconEnabled: config?.trayIconEnabled,
       useMutationTitleLogic: config?.useMutationTitleLogic
@@ -447,6 +459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "cameraResolution", path: "./tools/cameraResolution" },
       { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio" },
       { name: "navigationButtons", path: "./tools/navigationButtons" },
+      { name: "inlineTranslate", path: "./tools/inlineTranslate" },
       { name: "framelessTweaks", path: "./tools/frameless" },
       { name: "customStickers", path: "./tools/customStickers" },
       { name: "dockIconRenderer", path: "./tools/dockIconRenderer" },
@@ -465,6 +478,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
           moduleInstance.init(config);
         }
+        loadedModules.set(module.name, moduleInstance);
         successCount++;
       } catch (err) {
         console.error(`Preload: Failed to load ${module.name}:`, err.message);
@@ -484,6 +498,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     ipcRenderer.on("config-changed", (_event, configChanges) => {
       for (const [key, value] of Object.entries(configChanges)) {
         config[key] = value;
+      }
+
+      const inlineTranslate = loadedModules.get("inlineTranslate");
+      if (inlineTranslate && typeof inlineTranslate.updateConfig === "function") {
+        inlineTranslate.updateConfig(config);
       }
     });
 

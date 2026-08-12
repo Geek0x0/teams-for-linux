@@ -23,6 +23,7 @@ const JoinMeetingDialog = require("../joinMeetingDialog");
 const AddProfileDialog = require("../profileDialogs/addProfile");
 const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const autoUpdaterModule = require("../autoUpdater");
+const TranslationSettingsDialog = require("../translationSettingsDialog");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
@@ -51,6 +52,7 @@ class Menus {
       this.window,
       this.configGroup.startupConfig.meetupJoinRegEx
     );
+    this.translationSettingsDialog = new TranslationSettingsDialog(this.window);
     // Only allocate the Add-profile / Manage-profiles dialogs when multi-
     // account is enabled. The Profiles menu entries that trigger them are
     // themselves gated on the same flag, so with the flag off these objects
@@ -351,6 +353,10 @@ class Menus {
         message: error.message,
       });
     }
+  }
+
+  showTranslationSettings() {
+    this.translationSettingsDialog.show();
   }
 
   updateMenu() {
@@ -768,7 +774,7 @@ function chooseLanguage(item, menus) {
 }
 
 function removeFromList(list, item) {
-  const itemIndex = list.findIndex((l) => l == item);
+  const itemIndex = list.findIndex((l) => l === item);
   if (itemIndex >= 0) {
     list.splice(itemIndex, 1);
   }
@@ -777,7 +783,7 @@ function removeFromList(list, item) {
 }
 
 function addToList(list, item) {
-  const itemIndex = list.findIndex((l) => l == item);
+  const itemIndex = list.findIndex((l) => l === item);
   if (itemIndex < 0) {
     list.push(item);
   }
