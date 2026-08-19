@@ -8,6 +8,16 @@ const DEFAULT_LANGUAGES = [
   { code: "ES", label: "Spanish" },
 ];
 
+// The main window navigates in-place through login.microsoftonline.com (and
+// other auth domains) for SSO, reusing this same preload — so init() must
+// check the current host, or the toolbar leaks onto Microsoft's sign-in UI.
+const TRANSLATE_HOSTS = ["teams.cloud.microsoft", "teams.microsoft.com", "teams.live.com"];
+function isTranslateHost(hostname) {
+  return TRANSLATE_HOSTS.some(
+    (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+  );
+}
+
 const STORAGE_KEY = "tfl-inline-translate-target-language";
 const TRANSLATE_ICON_DATA_URL =
   "data:image/png;base64," +
@@ -242,6 +252,10 @@ class InlineTranslate {
   init(config) {
     if (this.#toolbar || !config.translation?.enabled) {
       this.#config = config;
+      return;
+    }
+
+    if (!isTranslateHost(globalThis.location.hostname)) {
       return;
     }
 
