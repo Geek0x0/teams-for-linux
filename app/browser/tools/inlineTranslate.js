@@ -730,30 +730,14 @@ class InlineTranslate {
       return true;
     }
 
-    if (
-      !element.isContentEditable &&
-      element.getAttribute("contenteditable") !== "true"
-    ) {
-      return false;
-    }
-
-    if (
-      descriptor.includes("message") ||
-      descriptor.includes("reply") ||
-      descriptor.includes("compose") ||
-      descriptor.includes("chat")
-    ) {
-      return true;
-    }
-
-    if (
-      element.getAttribute("aria-multiline") === "true" ||
-      element.getAttribute("role") === "textbox"
-    ) {
-      return true;
-    }
-
-    return false;
+    // Any other visible, non-search editable box counts as a supported editor —
+    // Teams renders compose/reply/description fields with inconsistent aria
+    // roles (some rich-text areas use role="application" instead of "textbox"),
+    // so keying off specific labels/roles missed most non-chat pages.
+    return (
+      element.isContentEditable ||
+      element.getAttribute("contenteditable") === "true"
+    );
   }
 
   #isVisible(element) {
