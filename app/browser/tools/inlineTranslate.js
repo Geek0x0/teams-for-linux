@@ -889,7 +889,7 @@ class InlineTranslate {
       },
       {
         name: "left",
-        top: editorRect.bottom - toolbarHeight,
+        top: editorRect.top + (editorRect.height - toolbarHeight) / 2,
         left: editorRect.left - toolbarWidth - spacing,
       },
       {
@@ -904,7 +904,7 @@ class InlineTranslate {
       },
       {
         name: "right",
-        top: editorRect.bottom - toolbarHeight,
+        top: editorRect.top + (editorRect.height - toolbarHeight) / 2,
         left: editorRect.right + spacing,
       },
       {
